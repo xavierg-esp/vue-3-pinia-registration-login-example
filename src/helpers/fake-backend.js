@@ -1,5 +1,5 @@
 export { fakeBackend };
-
+import axios from 'axios';
 // array in local storage for registered users
 const usersKey = 'vue-3-pinia-registration-login-example-users';
 let users = JSON.parse(localStorage.getItem(usersKey)) || [];
@@ -35,16 +35,49 @@ function fakeBackend() {
 
             // route functions
 
-            function authenticate() {
+            async function authenticate() {
+
+
                 const { username, password } = body();
-                const user = users.find(x => x.username === username && x.password === password);
 
-                if (!user) return error('Username or password is incorrect');
+                const url = 'https://tstdrv2789974.extforms.netsuite.com/app/site/hosting/scriptlet.nl?script=853&deploy=1&compid=TSTDRV2789974&h=4fb90b6b6a0bf48563c6'; // Replace with your API endpoint
 
-                return ok({
-                    ...basicDetails(user),
-                    token: 'fake-jwt-token'
+                const postData = {
+                username,
+                password,
+                postAction: 'validateLoginData',
+                };
+
+                await axios.post(url, postData)
+                .then((response) => {
+                    // Handle the response
+                    console.log('Response:' + JSON.stringify(response.data));
+                    console.log('Response Base:' + JSON.stringify(response));
+                    const parseJson = response.data;
+                    // Check the response for authentication success
+                    if (parseJson.success) {
+                        // Authentication successful
+                        return ok(
+                            parseJson
+                        );
+                    } else {
+                        // Authentication failed
+                        return error('Username or password is incorrect');
+                    }
+                })
+                .catch((error) => {
+                    // Handle any errors
+                    console.error('An error occurred:', error);
                 });
+
+                // const user = users.find(x => x.username === username && x.password === password);
+
+                // if (!user) return error('Username or password is incorrect');
+
+                // return ok({
+                //     ...basicDetails(user),
+                //     token: 'fake-jwt-token'
+                // });
             }
 
             function register() {
@@ -123,7 +156,8 @@ function fakeBackend() {
             }
 
             function isAuthenticated() {
-                return opts.headers['Authorization'] === 'Bearer fake-jwt-token';
+                // return opts.headers['Authorization'] === 'Bearer fake-jwt-token';
+                return opts.headers['Authorization'] === 'Bearer RandomGeneratedKey';
             }
 
             function body() {
